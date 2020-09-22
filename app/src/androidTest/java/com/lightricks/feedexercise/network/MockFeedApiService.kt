@@ -24,9 +24,9 @@ class MockFeedApiService(private val context: Context) : FeedApiService {
     }
 
     private fun loadTestFeedJson(): String {
-        val inputStream = context.assets.open("get_feed_response.json")
-        return BufferedReader(InputStreamReader(inputStream))
-            .lines().collect(Collectors.joining("\n"))
+        return context.assets.open("get_feed_response.json")
+            .bufferedReader()
+            .use { it.readText() }
     }
 
 }

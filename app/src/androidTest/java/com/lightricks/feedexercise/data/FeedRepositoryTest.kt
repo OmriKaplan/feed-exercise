@@ -42,16 +42,24 @@ class FeedRepositoryTest {
 
     @Test
     fun refresh_saveToDB() {
-        repository.refresh().test()
+        val observer = repository.refresh().test()
         val savedFeedItemEntities: List<FeedItemEntity>? =
             feedDatabase.feedItemDao().getAll().blockingObserve()
 
+        observer.awaitTerminalEvent()
+        observer.assertComplete()
+        observer.assertNoErrors()
         assertThat(savedFeedItemEntities?.size).isEqualTo(10)
     }
 
     @Test
     fun feedItems_readFromDB() {
-        repository.refresh().test()
+        val feedItemEntities = listOf(
+            FeedItemEntity("1", "some/url", true),
+            FeedItemEntity("2", "another/url", false)
+        )
+
+        feedDatabase.feedItemDao().insertFeedItems(feedItemEntities)
         val feedItemsFromDB: List<FeedItem>? =
             Transformations.map(feedDatabase.feedItemDao().getAll()) {
                 it.toFeedItems()
@@ -64,7 +72,7 @@ class FeedRepositoryTest {
 
     private fun List<FeedItemEntity>.toFeedItems(): List<FeedItem> {
         return map {
-            FeedItem(it.id, it.uri, it.isPro)
+            FeedItem(it.id, it.thumbnailUri, it.isPremium)
         }
     }
 }

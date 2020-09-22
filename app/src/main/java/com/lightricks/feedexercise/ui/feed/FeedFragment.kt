@@ -40,7 +40,7 @@ class FeedFragment : Fragment() {
     private fun setupViewModel() {
         viewModel = ViewModelProvider(
             this,
-            FeedViewModelFactory(activity?.applicationContext?.applicationContext!!)
+            FeedViewModelFactory(requireContext())
         )
             .get(FeedViewModel::class.java)
 

@@ -5,7 +5,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import com.lightricks.feedexercise.database.FeedDatabase
 import com.lightricks.feedexercise.database.FeedItemEntity
-import com.lightricks.feedexercise.database.entityFrom
 import com.lightricks.feedexercise.network.FeedApiService
 import com.lightricks.feedexercise.network.GetFeedResponse
 import com.lightricks.feedexercise.network.TemplatesMetadataItem
@@ -17,8 +16,8 @@ import io.reactivex.schedulers.Schedulers
  * where the data actually comes from (network, database or somewhere else).
  */
 class FeedRepository(
-    val feedApiService: FeedApiService,
-    val feedDatabase: FeedDatabase
+    private val feedApiService: FeedApiService,
+    private val feedDatabase: FeedDatabase
 ) {
 
     private val TAG = "FeedRepository"
@@ -30,7 +29,7 @@ class FeedRepository(
 
     private fun List<FeedItemEntity>.toFeedItems(): List<FeedItem> {
         return map {
-            FeedItem(it.id, it.uri, it.isPro)
+            FeedItem(it.id, it.thumbnailUri, it.isPremium)
         }
     }
 
@@ -47,15 +46,20 @@ class FeedRepository(
         Log.d(TAG, "handleResponse: handling response")
         val dbFeedItems = ArrayList<FeedItemEntity>()
         for (item: TemplatesMetadataItem in feedResponse!!) {
-            val feedItem = FeedItem(
-                item.id,
-                "https://assets.swishvideoapp.com/Android/demo/catalog/thumbnails/${item.templateThumbnailURI}",
-                item.isPremium
-            )
-            dbFeedItems.add(entityFrom(feedItem))
+            dbFeedItems.add(item.toFeedItemEntity())
         }
 
         return feedDatabase.feedItemDao().insertFeedItems(dbFeedItems)
+    }
+
+    private fun TemplatesMetadataItem.toFeedItemEntity(): FeedItemEntity {
+        val thumbnailUriPrefix = "https://assets.swishvideoapp.com/Android/demo/catalog/thumbnails/"
+
+        return FeedItemEntity(
+            this.id,
+            "${thumbnailUriPrefix}${this.templateThumbnailURI}",
+            this.isPremium
+        )
     }
 
 }

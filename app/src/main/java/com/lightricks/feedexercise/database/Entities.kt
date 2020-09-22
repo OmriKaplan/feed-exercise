@@ -8,8 +8,8 @@ import com.lightricks.feedexercise.data.FeedItem
 @Entity(tableName = "feedItems")
 data class FeedItemEntity(
     @PrimaryKey val id: String,
-    @ColumnInfo val uri: String,
-    @ColumnInfo val isPro: Boolean
+    @ColumnInfo val thumbnailUri: String,
+    @ColumnInfo val isPremium: Boolean
 )
 
 fun entityFrom(feedItem: FeedItem): FeedItemEntity {

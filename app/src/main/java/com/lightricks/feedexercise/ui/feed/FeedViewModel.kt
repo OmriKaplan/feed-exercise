@@ -7,28 +7,21 @@ import androidx.room.Room
 import com.lightricks.feedexercise.data.FeedItem
 import com.lightricks.feedexercise.data.FeedRepository
 import com.lightricks.feedexercise.database.FeedDatabase
-import com.lightricks.feedexercise.database.FeedItemEntity
-import com.lightricks.feedexercise.database.entityFrom
 import com.lightricks.feedexercise.network.FeedApiServiceFactory
-import com.lightricks.feedexercise.network.GetFeedResponse
-import com.lightricks.feedexercise.network.TemplatesMetadataItem
 import com.lightricks.feedexercise.util.Event
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import java.lang.IllegalArgumentException
 
 /**
  * This view model manages the data for [FeedFragment].
  */
-open class FeedViewModel(val feedRepository: FeedRepository) : ViewModel() {
+open class FeedViewModel(private val feedRepository: FeedRepository) : ViewModel() {
 
     private val TAG = "FeedViewModel"
 
     private val isLoading = MutableLiveData<Boolean>()
     private val isEmpty = MutableLiveData<Boolean>()
-    private val feedItems = feedRepository.feedItems
+    private val feedItems = MediatorLiveData<List<FeedItem>>()
     private val networkErrorEvent = MutableLiveData<Event<String>>()
 
     private var refreshDisposable: Disposable? = null
@@ -39,6 +32,10 @@ open class FeedViewModel(val feedRepository: FeedRepository) : ViewModel() {
     fun getNetworkErrorEvent(): LiveData<Event<String>> = networkErrorEvent
 
     init {
+        feedItems.addSource(feedRepository.feedItems) {
+            feedItems.value = it
+            isEmpty.value = it.isEmpty()
+        }
         refresh()
     }
 
@@ -54,6 +51,7 @@ open class FeedViewModel(val feedRepository: FeedRepository) : ViewModel() {
 
     private fun handleNetworkError(error: Throwable?) {
         Log.d(TAG, "handleNetworkError: network error ${error.toString()}")
+        networkErrorEvent.postValue(Event(error?.message ?: "error"))
         isLoading.postValue(false)
     }
 
