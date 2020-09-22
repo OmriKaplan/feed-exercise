@@ -1,5 +1,9 @@
 package com.lightricks.feedexercise.database
 
-/**
- * todo: add the abstract class that extents RoomDatabase here
- */
+import androidx.room.Database
+import androidx.room.RoomDatabase
+
+@Database(entities = arrayOf(FeedItemEntity::class), version = 1, exportSchema = false)
+abstract class FeedDatabase: RoomDatabase() {
+    abstract fun feedItemDao(): FeedItemDao
+}
